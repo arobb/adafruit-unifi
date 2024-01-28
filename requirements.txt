@@ -1,0 +1,4 @@
+pyunifi
+adafruit-io
+python-daemon
+pidfile
