@@ -13,3 +13,5 @@ Daemon
 Configure
 ---------
 Copy `config_template.ini` to `config.ini` and update the values as appropriate.
+
+Copy `switch_ports_template.yaml` to `switch_ports.yaml` and update the values as appropriate.

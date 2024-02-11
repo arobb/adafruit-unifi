@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 import platform
 import sys
-import pidfile
 
 # Import thrid party Unifi Python client
 from pyunifi.controller import Controller
@@ -40,29 +39,25 @@ def update_ports(client: AIO_MQTTClient, feed_id: str, payload: str):
         mode_setting = Switch.MODE.Auto
 
     # List of ports
-    port_list = [
-        {'switch': 'mustengo_sw00',
-         'mac': '24:5a:4c:7d:5a:a8',
-         'idx': 8},
-        {'switch': 'mustengo_sw_office',
-         'mac': 'ac:8b:a9:bb:92:73',
-         'idx': 2}
-    ]
+    switch_ports_config = conf.switch_config()
 
-    # Get the certificate chain.. somehow. Done here by downloading through Chrome
+    # Certificate chain
+    cert_chain_file = conf.cert_chain_file()
+
+    # Initialize the Unifi client
     log.info(f'Connecting to Unifi site {conf.unifi.site} at {conf.unifi.host}')
     unifi_client = Controller(host=conf.unifi.host,
                               port=conf.unifi.port,
                               username=conf.unifi.username,
                               password=conf.unifi.password,
                               site_id=conf.unifi.site,
-                              ssl_verify=conf.unifi.cert_path)
+                              ssl_verify=cert_chain_file)
 
     # Iterate through the port list
-    for port in port_list:
+    for port in switch_ports_config:
         # Pull the switch and port configurations
         sw = Switch(unifi_client, port['mac'])
-        port_config = sw.get_port_overrides('port_idx', port['idx'])
+        port_config = sw.get_port_overrides('port_idx', int(port['idx']))
 
         # Skip configuring the port if it is already in the correct mode
         if port_config['poe_mode'] == mode_setting.value:
