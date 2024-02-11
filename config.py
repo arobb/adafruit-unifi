@@ -2,7 +2,7 @@
 
 Basic structure based on https://github.com/adafruit/Pi_Physical_Dashboard/blob/master/config.py
 """
-
+import os
 from configparser import SafeConfigParser
 
 class SimpleObject(object):
@@ -19,6 +19,10 @@ class Config(object):
 
     def __init__(self, filename):
         self._parser = SafeConfigParser()
+
+        if not os.path.isfile(filename):
+            filename = f'/etc/adafruit-unifi/{filename}'
+
         if len(self._parser.read(filename)) == 0:
             # Failed to load the config file, throw an error.
             raise RuntimeError('Failed to find configuration file with name: {0}'.format(filename))
