@@ -11,13 +11,12 @@ from tempfile import NamedTemporaryFile
 from urllib.request import urlopen
 
 
-class SimpleObject(object):
+class SimpleObject(dict):
     def __init__(self, **kwargs):
-        if len(kwargs) == 0:
-            pass
+        super().__init__(**kwargs)
 
-        for k, v in kwargs.items():
-            setattr(self, k, v)
+    def __getattr__(self, item):
+        return self.get(item)
 
 
 class Config(object):
@@ -50,6 +49,17 @@ class Config(object):
 
         return switch_port_config['port_list']
 
+    def _get_certificate_url_list(self):
+        url_list = list()
+
+        for ca, url in self.lets_encrypt_roots.items():
+            url_list.append(url)
+
+        for ca, url in self.lets_encrypt_ca.items():
+            url_list.append(url)
+
+        return url_list
+
     def get_cert_chain_file(self) -> str:
         """Download the certficate chain"""
         # Get the host's certificate
@@ -61,7 +71,8 @@ class Config(object):
             self.cert_chain_file.write(host_cert.encode('UTF8'))
 
             # Download trusted CA certificates
-            for ca in self.unifi.ca_list.split(','):
+            ca_url_list = self._get_certificate_url_list()
+            for ca in ca_url_list:
                 with urlopen(ca) as root_fh:
                     ca_cert = root_fh.read()
                     self.cert_chain_file.write(ca_cert)
