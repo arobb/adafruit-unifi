@@ -9,6 +9,7 @@ from pyunifi.controller import Controller
 from Adafruit_IO import Client as AIO_Client
 from Adafruit_IO import MQTTClient as AIO_MQTTClient
 from Adafruit_IO import Data
+from Adafruit_IO.errors import RequestError
 
 from config import Config
 from unifi_switch import Switch
@@ -98,8 +99,16 @@ def run():
     aio_mqtt.connect()
 
     # Get current value
-    latest = aio.receive(feed=conf.adafruit_io.feed)  # Returns Adafruit_IO.Data object
-    update_ports(aio_mqtt, conf.adafruit_io.feed, latest.value)
+    try:
+        latest = aio.receive(feed=conf.adafruit_io.feed)  # Returns Adafruit_IO.Data object
+        update_ports(aio_mqtt, conf.adafruit_io.feed, latest.value)
+
+    except RequestError as e:
+        if "404" in str(e):
+            log.warning(f'Ignoring Adafruit IO 404 error: "{str(e)}"')
+            pass
+        else:
+            raise e
 
     # Run
     aio_mqtt.loop_blocking()
