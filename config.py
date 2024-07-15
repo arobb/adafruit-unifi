@@ -25,6 +25,7 @@ class Config(object):
 
     def __init__(self, filename):
         self._parser = SafeConfigParser()
+        self.cert_chain_file = None
 
         if not os.path.isfile(filename):
             filename = f'/etc/adafruit-unifi/{filename}'
@@ -49,22 +50,23 @@ class Config(object):
 
         return switch_port_config['port_list']
 
-    def cert_chain_file(self):
+    def get_cert_chain_file(self) -> str:
         """Download the certficate chain"""
         # Get the host's certificate
         host_cert = ssl.get_server_certificate((self.unifi.host, self.unifi.port))
 
         # Store the host and CA chain in a temp file
-        self.cert_chain_file = NamedTemporaryFile()
-        self.cert_chain_file.write(host_cert.encode('UTF8'))
+        if self.cert_chain_file is None:
+            self.cert_chain_file = NamedTemporaryFile()
+            self.cert_chain_file.write(host_cert.encode('UTF8'))
 
-        # Download trusted CA certificates
-        for ca in self.unifi.ca_list.split(','):
-            with urlopen(ca) as root_fh:
-                ca_cert = root_fh.read()
-                self.cert_chain_file.write(ca_cert)
+            # Download trusted CA certificates
+            for ca in self.unifi.ca_list.split(','):
+                with urlopen(ca) as root_fh:
+                    ca_cert = root_fh.read()
+                    self.cert_chain_file.write(ca_cert)
 
-        # Rewind the temp file so we start to read it from the beginning
-        self.cert_chain_file.seek(0)
+            # Rewind the temp file so we start to read it from the beginning
+            self.cert_chain_file.seek(0)
 
         return self.cert_chain_file.name

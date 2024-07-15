@@ -42,7 +42,7 @@ def update_ports(client: AIO_MQTTClient, feed_id: str, payload: str):
     switch_ports_config = conf.switch_config()
 
     # Certificate chain
-    cert_chain_file = conf.cert_chain_file()
+    cert_chain_file = conf.get_cert_chain_file()
 
     # Initialize the Unifi client
     log.info(f'Connecting to Unifi site {conf.unifi.site} at {conf.unifi.host}')
